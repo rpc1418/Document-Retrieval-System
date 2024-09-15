@@ -83,8 +83,8 @@ Articles are scraped every 5 minutes and inserted into the database, ensuring th
 
   1. Clone the repository:
    ```bash
-   git clone <repository_url>
-   cd <repository_name>
+   git clone https://github.com/rpc1418/21BLC1098_ML
+   cd 21BLC1098_ML
 ```
   2. Clone the repository:
    ```bash

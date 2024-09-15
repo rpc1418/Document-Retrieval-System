@@ -6,6 +6,9 @@ import requests
 from bs4 import BeautifulSoup
 import threading
 
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+
 app = Flask(__name__)
 
 # Database file
@@ -93,6 +96,7 @@ def search():
     top_k = int(request.args.get('top_k', 10))
     threshold = float(request.args.get('threshold', 0.5))
 
+    # Rate limit check
     if not track_request(user_id):
         return jsonify({"error": "Too many requests"}), 429
 
@@ -102,15 +106,62 @@ def search():
     if cached_result:
         return jsonify({"results": eval(cached_result)}), 200
 
-    # Perform the search operation (dummy implementation here)
+    # Perform the search operation
     results = perform_search(text, top_k, threshold)
+
+    # Store the result in cache
     set_cache(cache_key, str(results))
-    
+
     return jsonify({"results": results}), 200
 
+
 def perform_search(text, top_k, threshold):
-    # Dummy search implementation; replace with actual search logic
-    return [{"id": i, "result": f"Result {i} for {text}"} for i in range(top_k)]
+    # Retrieve documents from the database
+    with sqlite3.connect(DB_FILE) as conn:
+        cursor = conn.cursor()
+        cursor.execute('SELECT id, url, text FROM documents')
+        documents = cursor.fetchall()
+
+    if not documents:
+        return []
+
+    # TF-IDF vectorization
+    vectorizer = TfidfVectorizer()
+    document_texts = [doc[2] for doc in documents]  # Using the 'text' field from the documents
+    document_vectors = vectorizer.fit_transform(document_texts)
+
+    # Transform the query into a vector
+    query_vector = vectorizer.transform([text])
+
+    # Calculate cosine similarity between the query and all documents
+    similarity_scores = cosine_similarity(query_vector, document_vectors)[0]
+
+    # Filter documents based on similarity threshold
+    results = [
+        (documents[i], similarity_scores[i])
+        for i in range(len(documents))
+        if similarity_scores[i] >= threshold
+    ]
+
+    # Sort by similarity score in descending order
+    results.sort(key=lambda x: x[1], reverse=True)
+
+    # Limit the results to the top_k documents
+    top_results = results[:top_k]
+
+    # Format the results for output
+    formatted_results = [
+        {
+            "id": doc[0],
+            "url": doc[1],
+            "text_snippet": doc[2][:200],  # Provide a snippet of the document text
+            "similarity_score": score
+        }
+        for doc, score in top_results
+    ]
+
+    return formatted_results
+
 
 # Check if the article title already exists in the database
 def document_exists_by_title(title):

@@ -86,7 +86,7 @@ Articles are scraped every 5 minutes and inserted into the database, ensuring th
    git clone https://github.com/rpc1418/21BLC1098_ML
    cd 21BLC1098_ML
 ```
-  2. Clone the repository:
+  2. Install the requirements:
    ```bash
    pip install -r requirements.txt
 

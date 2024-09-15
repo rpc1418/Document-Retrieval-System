@@ -97,14 +97,14 @@ python app.py
 ```
   4. To run in a Docker container:
    ```bash
-docker build -t document-retrieval-system .
-docker run -p 5000:5000 document-retrieval-system
+docker build -t 21blc1098ml .
+docker run -p 5000:5000 21blc1098ml
 ```
 ### Docker
 The project is Dockerized for easy deployment. Use the following command to build and run the Docker container:
 ```bash
-docker build -t document-retrieval-system .
-docker run -p 5000:5000 document-retrieval-system
+docker build -t 21blc1098ml .
+docker run -p 5000:5000 21blc1098ml
 
 ```
 
